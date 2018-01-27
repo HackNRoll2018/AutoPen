@@ -20,12 +20,9 @@ char password[] = "autopeniscool"; // your network key
 WiFiClientSecure client;
 UniversalTelegramBot bot(BOTtoken, client);
 
-int Bot_mtbs = 1000; //mean time between scan messages
+int Bot_mtbs = 500; //mean time between scan messages
 long Bot_lasttime;   //last time messages' scan has been done
 bool Start = false;
-
-const int ledPin = D2;
-int ledStatus = 0;
 
 int servoPin = D2;
 Servo servo;
@@ -42,43 +39,18 @@ void handleNewMessages(int numNewMessages) {
     String from_name = bot.messages[i].from_name;
     if (from_name == "") from_name = "Guest";
 
-    if (text == "/ledon") {
+    if (text == "/clickpen") {
       //control the servo's direction and the position of the motor
-
       servo.write(45);      // Turn SG90 servo Left to 45 degrees
-      delay(1000);          // Wait 1 second
-      servo.write(90);      // Turn SG90 servo back to 90 degrees (center position)
-      delay(1000);          // Wait 1 second
-      servo.write(135);     // Turn SG90 servo Right to 135 degrees
-      delay(1000);          // Wait 1 second
-      servo.write(90);      // Turn SG90 servo back to 90 degrees (center position)
-      delay(1000);
-
-      //end control the servo's direction and the position of the motor
-      ledStatus = 1;
-      bot.sendMessage(chat_id, "Led is ON", "");
-    }
-
-    if (text == "/ledoff") {
-      ledStatus = 0;
-      digitalWrite(ledPin, LOW);    // turn the LED off (LOW is the voltage level)
-      bot.sendMessage(chat_id, "Led is OFF", "");
-    }
-
-    if (text == "/status") {
-      if (ledStatus) {
-        bot.sendMessage(chat_id, "Led is ON", "");
-      } else {
-        bot.sendMessage(chat_id, "Led is OFF", "");
-      }
+      delay(500);
+      servo.write(130);
+      bot.sendMessage(chat_id, "Pen is clicked", "");
     }
 
     if (text == "/start") {
-      String welcome = "Welcome to Universal Arduino Telegram Bot library, " + from_name + ".\n";
-      welcome += "This is Flash Led Bot example.\n\n";
-      welcome += "/ledon : to switch the Led ON\n";
-      welcome += "/ledoff : to switch the Led OFF\n";
-      welcome += "/status : Returns current status of LED\n";
+      String welcome = "Welcome to AutoPen, " + from_name + ".\n";
+      welcome += "This Telegram bot helps you to automate the most mundane part of using a pen.\n\n";
+      welcome += "/clickpen : to click pen\n";
       bot.sendMessage(chat_id, welcome, "Markdown");
     }
   }
@@ -87,7 +59,6 @@ void handleNewMessages(int numNewMessages) {
 
 void setup() {
   Serial.begin(9600);
-  servo.attach(servoPin);
 
   // Set WiFi to station mode and disconnect from an AP if it was Previously
   // connected
@@ -110,9 +81,8 @@ void setup() {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-  pinMode(servoPin, OUTPUT); // initialize digital ledPin as an output.
-  delay(10);
-//  digitalWrite(ledPin, LOW); // initialize pin as off
+  servo.attach(servoPin);
+  pinMode(servoPin, OUTPUT); // initialize digital servoPin as an output.
 }
 
 void loop() {
