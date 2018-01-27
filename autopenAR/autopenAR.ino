@@ -25,8 +25,10 @@ long Bot_lasttime;   //last time messages' scan has been done
 bool Start = false;
 
 int servoPin = D2;
+int speakerPin = D8;
 Servo servo;
 int servoAngle = 0;   // servo position in degrees
+bool state = false; // false = unclicked, true = clicked
 
 void handleNewMessages(int numNewMessages) {
   Serial.println("handleNewMessages");
@@ -41,10 +43,25 @@ void handleNewMessages(int numNewMessages) {
 
     if (text == "/clickpen") {
       //control the servo's direction and the position of the motor
+      if (state) {
+        tone(speakerPin, 523.25, 450);
+      } else {
+        tone(speakerPin, 349.23, 450);
+      }
       servo.write(45);      // Turn SG90 servo Left to 45 degrees
       delay(500);
+      if (state) {
+        tone(speakerPin, 349.23, 500);
+      } else {
+        tone(speakerPin, 523.25, 500);
+      }
       servo.write(130);
-      bot.sendMessage(chat_id, "Pen is clicked", "");
+      state = !state;
+      if (state) {
+        bot.sendMessage(chat_id, "Pen is clicked", "");
+      } else {
+        bot.sendMessage(chat_id, "Pen is unclicked", "");
+      }
     }
 
     if (text == "/start") {
