@@ -25,6 +25,7 @@ long Bot_lasttime;   //last time messages' scan has been done
 bool Start = false;
 
 int servoPin = D2;
+int speakerPin = D8;
 Servo servo;
 int servoAngle = 0;   // servo position in degrees
 
@@ -41,8 +42,10 @@ void handleNewMessages(int numNewMessages) {
 
     if (text == "/clickpen") {
       //control the servo's direction and the position of the motor
+      tone(speakerPin, 523.25, 450);
       servo.write(45);      // Turn SG90 servo Left to 45 degrees
       delay(500);
+      tone(speakerPin, 349.23, 500);
       servo.write(130);
       bot.sendMessage(chat_id, "Pen is clicked", "");
     }
