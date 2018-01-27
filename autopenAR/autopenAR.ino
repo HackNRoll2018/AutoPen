@@ -9,6 +9,8 @@
 #include <WiFiClientSecure.h>
 #include <UniversalTelegramBot.h>
 #include <Servo.h>
+#include <time.h>
+#include <stdlib.h>
 
 // Initialize Wifi connection to the router
 char ssid[] = "AutoPen";     // your network SSID (name)
@@ -20,15 +22,25 @@ char password[] = "autopeniscool"; // your network key
 WiFiClientSecure client;
 UniversalTelegramBot bot(BOTtoken, client);
 
-int Bot_mtbs = 500; //mean time between scan messages
+int Bot_mtbs = 200; //mean time between scan messages
 long Bot_lasttime;   //last time messages' scan has been done
 bool Start = false;
+bool state = false;
 
 int servoPin = D2;
 int speakerPin = D8;
+int redPin = D3;
+int greenPin = D4;
+int bluePin = D6;
+
 Servo servo;
 int servoAngle = 0;   // servo position in degrees
-bool state = false; // false = unclicked, true = clicked
+
+void setColor(int red, int green, int blue) {
+  analogWrite(redPin, red);
+  analogWrite(greenPin, green);
+  analogWrite(bluePin, blue);  
+}
 
 void handleNewMessages(int numNewMessages) {
   Serial.println("handleNewMessages");
@@ -48,20 +60,17 @@ void handleNewMessages(int numNewMessages) {
       } else {
         tone(speakerPin, 349.23, 450);
       }
-      servo.write(45);      // Turn SG90 servo Left to 45 degrees
+      servo.write(90);      // Turn SG90 servo Left to 45 degrees
       delay(500);
       if (state) {
         tone(speakerPin, 349.23, 500);
       } else {
         tone(speakerPin, 523.25, 500);
       }
-      servo.write(130);
+      servo.write(0);
       state = !state;
-      if (state) {
-        bot.sendMessage(chat_id, "Pen is clicked", "");
-      } else {
-        bot.sendMessage(chat_id, "Pen is unclicked", "");
-      }
+      bot.sendMessage(chat_id, "Pen is clicked", "");
+//      setColor(rand()%255, rand()%255, rand()%255);
     }
 
     if (text == "/start") {
@@ -70,12 +79,30 @@ void handleNewMessages(int numNewMessages) {
       welcome += "/clickpen : to click pen\n";
       bot.sendMessage(chat_id, welcome, "Markdown");
     }
+
+    if (text == "/red") {
+      setColor(255,0,0);
+    }
+    if (text == "/green") {
+      setColor(0,255,0);
+    }
+    if (text == "/blue") {
+      setColor(0,0,255);
+    }
+    if (text == "/white") {
+      setColor(255,255,255);
+    }
   }
 }
 
 
 void setup() {
   Serial.begin(9600);
+  
+  pinMode(redPin, OUTPUT);
+  pinMode(greenPin, OUTPUT);
+  pinMode(bluePin, OUTPUT);  
+  srand(time(NULL));
 
   // Set WiFi to station mode and disconnect from an AP if it was Previously
   // connected
@@ -100,6 +127,7 @@ void setup() {
 
   servo.attach(servoPin);
   pinMode(servoPin, OUTPUT); // initialize digital servoPin as an output.
+  servo.write(0);
 }
 
 void loop() {
