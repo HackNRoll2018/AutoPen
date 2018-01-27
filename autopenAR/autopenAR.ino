@@ -24,8 +24,12 @@ int Bot_mtbs = 1000; //mean time between scan messages
 long Bot_lasttime;   //last time messages' scan has been done
 bool Start = false;
 
-const int ledPin = 13;
+const int ledPin = D2;
 int ledStatus = 0;
+
+int servoPin = D2;
+Servo servo;
+int servoAngle = 0;   // servo position in degrees
 
 void handleNewMessages(int numNewMessages) {
   Serial.println("handleNewMessages");
@@ -39,7 +43,18 @@ void handleNewMessages(int numNewMessages) {
     if (from_name == "") from_name = "Guest";
 
     if (text == "/ledon") {
-      digitalWrite(ledPin, HIGH);   // turn the LED on (HIGH is the voltage level)
+      //control the servo's direction and the position of the motor
+
+      servo.write(45);      // Turn SG90 servo Left to 45 degrees
+      delay(1000);          // Wait 1 second
+      servo.write(90);      // Turn SG90 servo back to 90 degrees (center position)
+      delay(1000);          // Wait 1 second
+      servo.write(135);     // Turn SG90 servo Right to 135 degrees
+      delay(1000);          // Wait 1 second
+      servo.write(90);      // Turn SG90 servo back to 90 degrees (center position)
+      delay(1000);
+
+      //end control the servo's direction and the position of the motor
       ledStatus = 1;
       bot.sendMessage(chat_id, "Led is ON", "");
     }
@@ -71,7 +86,8 @@ void handleNewMessages(int numNewMessages) {
 
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
+  servo.attach(servoPin);
 
   // Set WiFi to station mode and disconnect from an AP if it was Previously
   // connected
@@ -94,9 +110,9 @@ void setup() {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-  pinMode(ledPin, OUTPUT); // initialize digital ledPin as an output.
+  pinMode(servoPin, OUTPUT); // initialize digital ledPin as an output.
   delay(10);
-  digitalWrite(ledPin, LOW); // initialize pin as off
+//  digitalWrite(ledPin, LOW); // initialize pin as off
 }
 
 void loop() {
