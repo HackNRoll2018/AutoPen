@@ -22,7 +22,7 @@ char password[] = "autopeniscool"; // your network key
 WiFiClientSecure client;
 UniversalTelegramBot bot(BOTtoken, client);
 
-int Bot_mtbs = 200; //mean time between scan messages
+int Bot_mtbs = 100; //mean time between scan messages
 long Bot_lasttime;   //last time messages' scan has been done
 bool Start = false;
 bool state = false;
@@ -32,7 +32,7 @@ int speakerPin = D8;
 int redPin = D3;
 int greenPin = D4;
 int bluePin = D6;
-
+String keyboard = "[[\"/clickpen\", \"/red\"],[\"/green\"],[\"/blue\"]]";
 Servo servo;
 int servoAngle = 0;   // servo position in degrees
 
@@ -92,6 +92,9 @@ void handleNewMessages(int numNewMessages) {
     if (text == "/white") {
       setColor(255,255,255);
     }
+//    bot.sendMessageWithReplyKeyboard(chat_id, "", "", keyboard, false, false, false);
+      String keyboardJson = "[[\"/clickpen\"],[\"/status\"], [\"/help\"]]";
+      bot.sendMessageWithReplyKeyboard(chat_id, "Choose from one of the following options", "", keyboardJson, true, false);
   }
 }
 
