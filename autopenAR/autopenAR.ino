@@ -1,10 +1,3 @@
-/*******************************************************************
-    An example of bot that receives commands and turns on and off
-    an LED.
- *                                                                 *
-    written by Giacarlo Bacchio (Gianbacchio on Github)
-    adapted by Brian Lough
- *******************************************************************/
 #include <ESP8266WiFi.h>
 #include <WiFiClientSecure.h>
 #include <UniversalTelegramBot.h>
@@ -27,19 +20,22 @@ long Bot_lasttime;   //last time messages' scan has been done
 bool Start = false;
 bool state = false;
 
-int servoPin = D2;
-int speakerPin = D8;
-int redPin = D3;
+int servoPin = D6;
+int speakerPin = D1;
+int redPin = D2;
 int greenPin = D4;
-int bluePin = D6;
-String keyboard = "[[\"/clickpen\", \"/red\"],[\"/green\"],[\"/blue\"]]";
+int bluePin = D3;
+int colorMode = 0;
+
+String keyboardJson = "[[\"/clickpen\"], [\"/help\"], [\"/changecolor\"]]";
+
 Servo servo;
 int servoAngle = 0;   // servo position in degrees
 
 void setColor(int red, int green, int blue) {
   analogWrite(redPin, red);
   analogWrite(greenPin, green);
-  analogWrite(bluePin, blue);  
+  analogWrite(bluePin, blue);
 }
 
 void handleNewMessages(int numNewMessages) {
@@ -69,42 +65,62 @@ void handleNewMessages(int numNewMessages) {
       }
       servo.write(0);
       state = !state;
-      bot.sendMessage(chat_id, "Pen is clicked", "");
-//      setColor(rand()%255, rand()%255, rand()%255);
+      bot.sendMessageWithReplyKeyboard(chat_id, "Pen is clicked", "", keyboardJson, true, false);
     }
 
-    if (text == "/start") {
+    else if (text == "/start") {
       String welcome = "Welcome to AutoPen, " + from_name + ".\n";
       welcome += "This Telegram bot helps you to automate the most mundane part of using a pen.\n\n";
       welcome += "/clickpen : to click pen\n";
-      bot.sendMessage(chat_id, welcome, "Markdown");
+      welcome += "/changecolor : to change the color of the LED\n";
+      welcome += "/help : shows all commands\n";
+      bot.sendMessageWithReplyKeyboard(chat_id, welcome, "Markdown", keyboardJson, true, false);
     }
 
-    if (text == "/red") {
-      setColor(255,0,0);
+    else if (text == "/changecolor") {
+      switch (colorMode) {
+        case 0:
+          setColor(255, 0, 0);
+          bot.sendMessageWithReplyKeyboard(chat_id, "Color is changed", "", keyboardJson, true, false);
+          break;
+        case 1:
+          setColor(0, 255, 0);
+          bot.sendMessageWithReplyKeyboard(chat_id, "Color is changed", "", keyboardJson, true, false);
+          break;
+        case 2:
+          setColor(0, 0, 255);
+          bot.sendMessageWithReplyKeyboard(chat_id, "Color is changed", "", keyboardJson, true, false);
+          break;
+        case 3:
+          setColor(0, 0, 0);
+          bot.sendMessageWithReplyKeyboard(chat_id, "LED is turned off", "", keyboardJson, true, false);
+          break;
+      }
+
+      colorMode = (colorMode + 1) % 4;
     }
-    if (text == "/green") {
-      setColor(0,255,0);
+
+    else if (text == "/help") {
+      String help = "Commands:\n\n";
+      help += "/start : to see the welcome message\n";
+      help += "/clickpen : to click pen\n";
+      help += "/changecolor : to change the color of the LED\n";
+      bot.sendMessage(chat_id, help, "Markdown");
     }
-    if (text == "/blue") {
-      setColor(0,0,255);
+
+    else {
+      bot.sendMessageWithReplyKeyboard(chat_id, "Unknown command. see /help", "", keyboardJson, true, false);
     }
-    if (text == "/white") {
-      setColor(255,255,255);
-    }
-//    bot.sendMessageWithReplyKeyboard(chat_id, "", "", keyboard, false, false, false);
-      String keyboardJson = "[[\"/clickpen\"],[\"/status\"], [\"/help\"]]";
-      bot.sendMessageWithReplyKeyboard(chat_id, "Choose from one of the following options", "", keyboardJson, true, false);
+
   }
 }
 
-
 void setup() {
   Serial.begin(9600);
-  
+
   pinMode(redPin, OUTPUT);
   pinMode(greenPin, OUTPUT);
-  pinMode(bluePin, OUTPUT);  
+  pinMode(bluePin, OUTPUT);
   srand(time(NULL));
 
   // Set WiFi to station mode and disconnect from an AP if it was Previously
